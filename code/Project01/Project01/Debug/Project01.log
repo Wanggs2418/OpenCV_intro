@@ -1,0 +1,4 @@
+﻿  change_color.cpp
+  read_display.cpp
+e:\opencv_intro\code\project01\project01\read_display.cpp(2): fatal error C1083: 无法打开包括文件: “opencv2/opencv.hpp”: No such file or directory
+  正在生成代码...
