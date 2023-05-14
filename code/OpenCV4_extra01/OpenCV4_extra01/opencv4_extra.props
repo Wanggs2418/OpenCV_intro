@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IncludePath>D:\opencv\newbuild\install\include\opencv2;D:\opencv\newbuild\install\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\opencv\newbuild\install\x64\vc15\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>opencv_aruco460d.lib;opencv_barcode460d.lib;opencv_bgsegm460d.lib;opencv_bioinspired460d.lib;opencv_calib3d460d.lib;opencv_ccalib460d.lib;opencv_core460d.lib;opencv_datasets460d.lib;opencv_dnn460d.lib;opencv_dnn_objdetect460d.lib;opencv_dnn_superres460d.lib;opencv_dpm460d.lib;opencv_face460d.lib;opencv_features2d460d.lib;opencv_flann460d.lib;opencv_fuzzy460d.lib;opencv_gapi460d.lib;opencv_hfs460d.lib;opencv_highgui460d.lib;opencv_imgcodecs460d.lib;opencv_imgproc460d.lib;opencv_img_hash460d.lib;opencv_intensity_transform460d.lib;opencv_line_descriptor460d.lib;opencv_mcc460d.lib;opencv_ml460d.lib;opencv_objdetect460d.lib;opencv_optflow460d.lib;opencv_phase_unwrapping460d.lib;opencv_photo460d.lib;opencv_plot460d.lib;opencv_quality460d.lib;opencv_rapid460d.lib;opencv_reg460d.lib;opencv_rgbd460d.lib;opencv_saliency460d.lib;opencv_shape460d.lib;opencv_stereo460d.lib;opencv_stitching460d.lib;opencv_structured_light460d.lib;opencv_superres460d.lib;opencv_surface_matching460d.lib;opencv_text460d.lib;opencv_tracking460d.lib;opencv_video460d.lib;opencv_videoio460d.lib;opencv_videostab460d.lib;opencv_wechat_qrcode460d.lib;opencv_xfeatures2d460d.lib;opencv_ximgproc460d.lib;opencv_xobjdetect460d.lib;opencv_xphoto460d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>
