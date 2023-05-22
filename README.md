@@ -1,4 +1,4 @@
-# 简介
+# CV_intro
 
 > 参考书籍：《从零学习OpenCV 4》| [官网教程](https://docs.opencv.org/4.x/d9/df8/tutorial_root.html)
 
@@ -242,7 +242,7 @@ OpenCV4 + OpenCV-Contrib 扩展模块(包含新加的内容，如专利内容等
 
 #### 3.1基础版示例代码
 
-注意提前再本地电脑设置好图片所在的路径！！！
+注意提前在本地电脑设置好图片所在的路径！！！
 
 ```c++
 //OpenCV中主要的头文件是include “opencv2/opencv.hpp”它可以调用每个 Opencv 模块的头文件
