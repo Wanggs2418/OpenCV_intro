@@ -1,5 +1,7 @@
 # OpenCV_intro
 
+# 第一部分(C++版)
+
 >  [官网教程](https://docs.opencv.org/4.x/d9/df8/tutorial_root.html)
 
 ## 0.C++
@@ -264,14 +266,126 @@ imwrite(filename, img, params)
 
 ### 2.5 视频加载和调用摄像头
 
+VideoCapture
+
 filename: 读取的视频名称
 
 apiPreference: 读取数据时设置的属性，如编码格式，是否调用 OpenNI
 
 ```c++
 //VideoCapture(filename, apiPreference);
-
+//对每帧视频的读取
+int main() {
+	VideoCapture video;
+	video.open("no.mp4");
+	if (!video.isOpened())
+	{
+		cout << "视频路径错误或者不存咋!";
+		return -1;
+	}
+	//property
+	cout <<"视频帧率" << video.get(CAP_PROP_FPS) << endl;
+	cout << "视频宽度" << video.get(CAP_PROP_FRAME_WIDTH) << endl;
+	while (1)
+	{
+		Mat frame;!
+		video >> frame;//存储每一帧的图像
+		if (frame.empty())
+		{
+			break;
+		}
+		imshow("video_name", frame); //显示每一帧
+		////每秒放多少帧，计算每个帧的时间间隔
+		uchar c = waitKey(1000/ video.get(CAP_PROP_FPS)); 
+		if (c == 'q')
+		{
+			break;
+		}
+	}
+	return 0;
+}
 ```
+
+**调用摄像头**
+
+```c++
+int main() {
+	Mat img;
+	VideoCapture video;
+	video.open(0);
+	if (!video.isOpened())
+	{
+		cout << "摄像头调用失败!";
+		return -1;
+	}
+	
+	video.set(CAP_PROP_FPS, 30);//设置帧率
+	cout << "视频帧率" << video.get(CAP_PROP_FPS) << endl;
+	cout << "视频宽度" << video.get(CAP_PROP_FRAME_WIDTH) << endl;
+	while (1)
+	{
+		Mat frame;
+		video >> frame;
+		if (frame.empty())
+		{
+			break;
+		}
+		imshow("video_name", frame); //显示每一帧
+		////每秒放多少帧，计算每个帧的时间间隔
+		uchar c = waitKey(1000 / video.get(CAP_PROP_FPS));
+		if (c == 'q')
+		{
+			break;
+		}
+	}
+
+	video >> img;
+	if (img.empty())
+	{
+		cout << "获取图像失败" << endl;
+		return -1;
+	}
+	//是否为彩色图片,3通道彩色图片
+	bool isColor = (img.type() == CV_8UC3);
+
+	VideoWriter writer;
+	int codec = VideoWriter::fourcc('M', 'J', 'P', 'G');//选择编码格式
+	double fps = 25.0; //设置帧率
+
+	string filename = "E:/Desktop/test01.avi";
+	writer.open(filename, codec, fps, img.size(), isColor);
+	if (!writer.isOpened())
+	{
+		cout << "打开视频文件失败" << endl;
+	}
+
+
+	while (1)
+	{
+		if (!video.read(img))
+		{
+			cout << "摄像头断开链接或视频读取完成" << endl;
+			return -1;
+		}
+		writer.write(img);//图像写入视频流，writer << img
+		imshow("显示写入视频的图像", img);
+		char c = waitKey(50);
+		if (c == 'q')
+		{
+			break;
+		}
+		//video.release();
+		//writer.release();
+	}
+	return 0;
+}
+```
+
+
+
+
+
+
 
 ### 2.6 颜色转换
 
@@ -379,33 +493,173 @@ OutputArray 	dst
 )	
 ```
 
+# 第二部分(Python版)
 
+> [opencv-python 原版文档](https://docs.opencv.org/4.1.2/d6/d00/tutorial_py_root.html)
+>
+> [opencv-python 中文官方文档](http://www.woshicver.com/)
 
+## 1.简介
 
+**直接安装**
 
+[**Install OpenCV-Python in Windows**](https://docs.opencv.org/4.1.2/d5/de5/tutorial_py_setup_in_windows.html)
 
+```bash
+pip install numpy
+pip install matplotlib
+pip install opencv-python
+```
 
+**包导入**
 
+```python
+import cv2 as cv
+print( cv.__version__ )
+```
 
+### 1.1图像
 
+[**Getting Started with Images**](https://docs.opencv.org/4.1.2/dc/d2e/tutorial_py_image_display.html)
 
+**[cv.imread()](https://docs.opencv.org/4.1.2/d4/da8/group__imgcodecs.html#ga288b8b3da0892bd651fce07b3bbd3a56)**: 读取图片，("01.jpg", 0)，0 表示读取方式为灰度
 
+**[cv.imshow()](https://docs.opencv.org/4.1.2/d7/dfc/group__highgui.html#ga453d42fe4cb60e5723281a89973ee563)**: 显示
 
+**[cv.imwrite()](https://docs.opencv.org/4.1.2/d4/da8/group__imgcodecs.html#gabbc7ef1aa2edfaa87772f1202d67e0ce)**: 保存
 
+彩色图片在 OpenCV 默认以BGR 模式读取，在 Matplotlib 中则以 RGB 模式显示
 
+### 1.2视频
 
+[**Getting Started with Videos**](https://docs.opencv.org/4.1.2/dd/d43/tutorial_py_video_display.html)
 
+**[cv.VideoCapture()](https://docs.opencv.org/4.1.2/d8/dfe/classcv_1_1VideoCapture.html)**:  per second of frames，fps
 
+**[cv.VideoWriter()](https://docs.opencv.org/4.1.2/dd/d9e/classcv_1_1VideoWriter.html)**: 
 
+VGA: 640×480
 
+HD: 1280×720
 
+FHD: 1920×1080
 
+4K: 3840×2160
 
+灰度图像：0-255，除了 0 表示黑，255 表示白，中间 244 个值表示灰度；
 
+关于 propId 数值对应的含义见：**[Flags for video I/O](https://docs.opencv.org/4.x/d4/d15/group__videoio__flags__base.html#gaeb8dd9c89c10a5c63c139bf7c4f5704d)**
 
+```python
+framewidth = 640
+frameheight = 480
+fps = 30 # 设置帧率
 
+# 其中propId是0到18之间的一个数字。每个数字表示视频的属性
+# cap.set(propID, value)
 
+# cap = cv2.VideoCapture("video/test01.avi")
+cap = cv.VideoCapture(0, cv.CAP_DSHOW)
+cap.set(cv.CAP_PROP_FRAME_WIDTH, framewidth) #id-3
+cap.set(cv.CAP_PROP_FRAME_HEIGHT, frameheight) #id-4
+cap.set(cv.CAP_PROP_FPS, fps) #id-5
+cap.set(cv.CAP_PROP_BRIGHTNESS, 1) #id-10
 
+while cap.isOpened():
+    success, img = cap.read()
+    cv.imshow("video", img)
+    # gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    # cv.imshow("gray", gray)
+    if cv.waitKey(1) & 0xFF == ord('q'):
+        break
+```
+
+**借助 VideoWriter 对象保存**
+
+- 文件路径，包含文件名 filename
+
+- 设置编码形式 FourCC, 4-bytes, 如  MJPG (.mp4), DIVX (.avi)
+
+  `cv.VideoWriter_fourcc('M','J','P','G')` 或者 `(*'MJPG')`
+
+- frames per second (fps)
+
+- frame size 
+
+- isColor, 为真则以彩色图片保存；否则以灰度图片保存
+
+**cap 对象，实时获取摄像机视频帧 => frame => out 对象**
+
+```python
+out = cv.VideoWriter('output.avi', fourcc, 20.0, (640,  480)) #定义一个VideoWriter对象，用于接受视频帧
+
+out.write(frame) #将获取的帧写入对象中
+cv.imshow('frame', frame)# 显示获取的帧
+```
+
+### 1.3 绘制图像
+
+[**Drawing Functions in OpenCV**](https://docs.opencv.org/4.1.2/dc/da5/tutorial_py_drawing_functions.html)
+
+### 1.4 鼠标刷
+
+[**Mouse as a Paint-Brush**](https://docs.opencv.org/4.1.2/db/d5b/tutorial_py_mouse_handling.html)
+
+### 1.5 色彩棒
+
+[**Trackbar as the Color Palette**](https://docs.opencv.org/4.1.2/d9/dc8/tutorial_py_trackbar.html)
+
+## 2.图片操作
+
+[**Image Processing in OpenCV**](https://docs.opencv.org/4.1.2/d2/d96/tutorial_py_table_of_contents_imgproc.html)
+
+图片的坐标轴表示，y 轴向下为正：
+
+![](img/30.jpg)
+
+### 2.1 色彩变换
+
+[**Changing Colorspaces**](https://docs.opencv.org/4.1.2/df/d9d/tutorial_py_colorspaces.html)
+
+将图片从一种色彩形式转换 (convert, cvt) 为另一种，常见的如： **BGR ↔ Gray, BGR ↔ HSV**
+
+```python
+ flags = [i for i in dir(cv) if i.startswith('COLOR_')]
+```
+
+### 2.2 形态变换
+
+[**Morphological Transformations**](https://docs.opencv.org/4.1.2/d9/d61/tutorial_py_morphological_ops.html)
+
+适用于二值图 ( binary images)，借助矩阵操作 (使用 numpy 包)。
+
+ **[cv.erode()](https://docs.opencv.org/4.1.2/d4/d86/group__imgproc__filter.html#gaeb1e0c1033e3f6b891a25d0511362aeb)**: 腐蚀
+
+**[cv.dilate()](https://docs.opencv.org/4.1.2/d4/d86/group__imgproc__filter.html#ga4ff0f3318642c4f469d0e11f242f3b6c)**: 膨胀
+
+![](img/29.jpg)
+
+```python
+import cv2 as cv
+import numpy as np
+
+kernel = np.ones((5, 5), np.uint8)
+img = cv.imread("img/03.jpg")
+
+img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+img_blur = cv.GaussianBlur(img, (7, 7), 0)
+img_canny = cv.Canny(img, 150, 200) # 边缘检测
+img_dilation = cv.dilate(img_gray, kernel, iterations=1) # 迭代一次
+img_erode = cv.erode(img_gray, kernel, iterations=1) # 迭代一次
+
+# cv.imshow("name01", img_gray)
+# cv.imshow("blur", img_blur)
+cv.imshow("canny", img_canny)
+cv.imshow("canny_dilation", img_dilation)
+cv.imshow("canny_erode", img_erode)
+
+c = cv.waitKey(0)
+```
 
 
 
