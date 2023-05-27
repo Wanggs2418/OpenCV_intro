@@ -499,7 +499,7 @@ OutputArray 	dst
 >
 > [opencv-python 中文官方文档](http://www.woshicver.com/)
 
-## 1.简介
+## 0.安装
 
 **直接安装**
 
@@ -517,6 +517,10 @@ pip install opencv-python
 import cv2 as cv
 print( cv.__version__ )
 ```
+
+## 1. GUI
+
+**[Gui Features in OpenCV](https://docs.opencv.org/4.1.2/dc/d4d/tutorial_py_table_of_contents_gui.html)**
 
 ### 1.1图像
 
@@ -601,23 +605,179 @@ cv.imshow('frame', frame)# 显示获取的帧
 
 [**Drawing Functions in OpenCV**](https://docs.opencv.org/4.1.2/dc/da5/tutorial_py_drawing_functions.html)
 
+Opencv 中：**先宽后高**
+
+numpy 中：**先高后宽**
+
+```python
+# [0, 256)
+img = np.random.randint(0, 256, (512, 500, 3), dtype=np.uint8)
+img[:] = 255, 255, 1
+# img = cv.imread("img/01.jpg")
+print(img.shape)
+
+# 定义线，起点；终点；颜色; 粗细
+# img.shape=(高， 宽)
+cv.line(img, (0,0), (img.shape[0], img.shape[1]), (0, 0, 255), 1)
+cv.putText(img, "demo_test", (100, 100), cv.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 1)
+
+cv.imshow("define_image", img)
+cv.waitKey(0)
+
+cv.destroyAllWindows()
+```
+
 ### 1.4 鼠标刷
 
 [**Mouse as a Paint-Brush**](https://docs.opencv.org/4.1.2/db/d5b/tutorial_py_mouse_handling.html)
 
 ### 1.5 色彩棒
 
-[**Trackbar as the Color Palette**](https://docs.opencv.org/4.1.2/d9/dc8/tutorial_py_trackbar.html)
+[**Trackbar as the Color Palette**](https://docs.opencv.org/4.1.2/d9/dc8/tutorial_py_trackbar.html)：通过滑动调整相应的值
 
-## 2.图片操作
+**[cv.getTrackbarPos()](https://docs.opencv.org/4.1.2/d7/dfc/group__highgui.html#ga122632e9e91b9ec06943472c55d9cda8)**
 
-[**Image Processing in OpenCV**](https://docs.opencv.org/4.1.2/d2/d96/tutorial_py_table_of_contents_imgproc.html)
+**[cv.createTrackbar()](https://docs.opencv.org/4.1.2/d7/dfc/group__highgui.html#gaf78d2155d30b728fc413803745b67a9b)**
+
+```python
+import cv2 as cv
+import numpy as np
+
+def doNothing():
+    pass
+img = np.zeros((300,512,3), np.uint8)
+
+cv.namedWindow("image_01")
+
+cv.createTrackbar("R", "image_01", 0, 255, doNothing)
+cv.createTrackbar("G", "image_01", 0, 255, doNothing)
+cv.createTrackbar("B", "image_01", 0, 255, doNothing)
+
+switch = '0:OFF \n1: ON'
+cv.createTrackbar(switch, 'image_01', 0, 1, doNothing)
+while(1):
+    cv.imshow('image_01', img)
+    k = cv.waitKey(1) & 0xFF
+    if k == 27:
+        break
+    r = cv.getTrackbarPos("R", "image_01")
+    g = cv.getTrackbarPos("G", "image_01")
+    b = cv.getTrackbarPos("B", "image_01")
+    s = cv.getTrackbarPos(switch, "image_01")
+
+    if s == 0:
+        img[:] = 0
+    else:
+        img[:] = [b, g, r]
+
+cv.destroyAllWindows()
+```
+
+
+
+## 2.图片核心操作
+
+**[Core Operations](https://docs.opencv.org/4.1.2/d7/d16/tutorial_py_table_of_contents_core.html)**
 
 图片的坐标轴表示，y 轴向下为正：
 
 ![](img/30.jpg)
 
-### 2.1 色彩变换
+### 2.1 基础操作
+
+**[Basic Operations on Images](https://docs.opencv.org/4.1.2/d3/df2/tutorial_py_basic_ops.html)**
+
+**OpenCV 默认访问的是：BGR 形式，即 [100, 100, 0] => blue, 1=> green, 2=> red**
+
+**img ROI (region of interes)**
+
+用感兴趣的的区域实现图片的叠加：
+
+```python
+# print(340-280, 333-273)
+# 图片分割,将图中的足球分割出来
+img = cv.imread("img/roi_test.jpg")
+print(img.shape) # 输出高，宽
+ball = img[220:280, 330:390]
+# print(ball)
+img[213:273, 85:145] = ball
+
+cv.imshow('a', img)
+cv.waitKey(0)
+cv.destroyAllWindows()
+```
+
+**边界填充-[cv.copyMakeBorder](https://docs.opencv.org/4.1.2/d2/de8/group__core__array.html#ga2ac1049c2c3dd25c2b41bffe17658a36)**
+
+```python
+# 边界填充
+BLUE = [255,0,0]
+img = cv.imread("img/03.jpg")
+# (src, top, bottom, left, right, bodertype)
+replicate = cv.copyMakeBorder(img,10,10,10,10,cv.BORDER_REPLICATE)
+reflect = cv.copyMakeBorder(img,10,10,10,10,cv.BORDER_REFLECT)
+reflect101 = cv.copyMakeBorder(img,10,10,10,10,cv.BORDER_REFLECT_101)
+wrap = cv.copyMakeBorder(img,10,10,10,10,cv.BORDER_WRAP)
+constant= cv.copyMakeBorder(img,10,10,10,10,cv.BORDER_CONSTANT,value=BLUE)
+
+
+plt.subplot(231),plt.imshow(img,'gray'),plt.title('ORIGINAL')
+plt.subplot(232),plt.imshow(replicate,'gray'),plt.title('REPLICATE')
+plt.subplot(233),plt.imshow(reflect,'gray'),plt.title('REFLECT')
+plt.subplot(234),plt.imshow(reflect101,'gray'),plt.title('REFLECT_101')
+plt.subplot(235),plt.imshow(wrap,'gray'),plt.title('WRAP')
+plt.subplot(236),plt.imshow(constant,'gray'),plt.title('CONSTANT')
+
+plt.show()
+```
+
+### 2.2 图片几何操作
+
+**[Arithmetic Operations on Images](https://docs.opencv.org/4.1.2/d0/d86/tutorial_py_image_arithmetics.html)**
+
+ **[cv.add()](https://docs.opencv.org/4.1.2/d2/de8/group__core__array.html#ga10ac1bfb180e2cfda1701d06c24fdbd6)**：区分 OpenCV 和 Numpy 的相加的不同，**OpenCV 的操作结果更好**
+
+OpenCV addition：saturated operation
+
+Numpy addition：a modulo operation (取模运算)
+
+
+
+**[cv.addWeighted()](https://docs.opencv.org/4.1.2/d2/de8/group__core__array.html#gafafb2513349db3bcff51f54ee5592a19)** ：图像混合 (Image Blending)
+$$
+dst = \alpha \cdot img1 + \beta \cdot img2 + \gamma
+$$
+
+```python
+# 图片融合操作
+img1 = cv.imread("img/01.jpg")
+print(img1.shape)
+img2 = cv.imread("img/02.jpg")
+print(img2.shape)
+img2 = img2[0:img1.shape[0], 0:img1.shape[1]]
+
+dst = cv.addWeighted(img1,0.1,img2,0.8,0)
+
+cv.imshow('dst', dst)
+cv.waitKey(0)
+cv.destroyAllWindows()
+```
+
+
+
+
+
+
+
+
+
+
+
+## 3.
+
+[**Image Processing in OpenCV**](https://docs.opencv.org/4.1.2/d2/d96/tutorial_py_table_of_contents_imgproc.html)
+
+### 3.2 色彩变换
 
 [**Changing Colorspaces**](https://docs.opencv.org/4.1.2/df/d9d/tutorial_py_colorspaces.html)
 
@@ -627,7 +787,7 @@ cv.imshow('frame', frame)# 显示获取的帧
  flags = [i for i in dir(cv) if i.startswith('COLOR_')]
 ```
 
-### 2.2 形态变换
+### 2.3 形态变换
 
 [**Morphological Transformations**](https://docs.opencv.org/4.1.2/d9/d61/tutorial_py_morphological_ops.html)
 
