@@ -383,10 +383,6 @@ int main() {
 
 
 
-
-
-
-
 ### 2.6 颜色转换
 
 **RGB**
@@ -673,9 +669,47 @@ while(1):
 cv.destroyAllWindows()
 ```
 
+实时交互型：使用 `waitkey(1)` 不是 `waitkey(0)`
+
+```python
+def empty(a):
+    pass
 
 
-## 2.图片核心操作
+cv.namedWindow("example_windows")
+cv.resizeWindow("example_windows", 640, 340)
+cv.createTrackbar("hue_min", "example_windows", 0, 179, empty)
+cv.createTrackbar("hue_max", "example_windows", 179, 179, empty)
+cv.createTrackbar("sat_min", "example_windows", 0, 255, empty)
+cv.createTrackbar("sat_max", "example_windows", 255, 255, empty)
+cv.createTrackbar("val_min", "example_windows", 0, 255, empty)
+cv.createTrackbar("val_max", "example_windows", 255, 255, empty)
+
+
+while(1):
+    img = cv.imread("img/03.jpg")
+    img_HSV = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    h_min = cv.getTrackbarPos("hue_min", "example_windows")
+    s_min = cv.getTrackbarPos("sat_min", "example_windows")
+    v_min = cv.getTrackbarPos("val_min", "example_windows")
+    h_max = cv.getTrackbarPos("hue_max", "example_windows")
+    s_max = cv.getTrackbarPos("sat_max", "example_windows")
+    v_max = cv.getTrackbarPos("val_max", "example_windows")
+    
+    print(h_min, h_max, s_min, s_max, v_min, v_max)
+    lower_array = np.array([h_min, s_min, v_min])
+    upper_array = np.array([h_max, s_max, v_max])
+    mask = cv.inRange(img_HSV, lower_array, upper_array)
+
+    cv.imshow("HSV", img_HSV)
+    cv.imshow("mask", mask)
+    k = cv.waitKey(1)
+    if k == "q":
+        break
+cv.destroyAllWindows()
+```
+
+## 2.基础核心操作
 
 **[Core Operations](https://docs.opencv.org/4.1.2/d7/d16/tutorial_py_table_of_contents_core.html)**
 
@@ -709,6 +743,8 @@ cv.destroyAllWindows()
 
 **边界填充-[cv.copyMakeBorder](https://docs.opencv.org/4.1.2/d2/de8/group__core__array.html#ga2ac1049c2c3dd25c2b41bffe17658a36)**
 
+**注意：cv2是默认BGR顺序，而用plt.imshow画图是RGB顺序**
+
 ```python
 # 边界填充
 BLUE = [255,0,0]
@@ -720,8 +756,8 @@ reflect101 = cv.copyMakeBorder(img,10,10,10,10,cv.BORDER_REFLECT_101)
 wrap = cv.copyMakeBorder(img,10,10,10,10,cv.BORDER_WRAP)
 constant= cv.copyMakeBorder(img,10,10,10,10,cv.BORDER_CONSTANT,value=BLUE)
 
-
-plt.subplot(231),plt.imshow(img,'gray'),plt.title('ORIGINAL')
+# cv2是默认BGR顺序，而用plt.imshow画图是RGB顺序
+plt.subplot(231),plt.imshow(img),plt.title('ORIGINAL')
 plt.subplot(232),plt.imshow(replicate,'gray'),plt.title('REPLICATE')
 plt.subplot(233),plt.imshow(reflect,'gray'),plt.title('REFLECT')
 plt.subplot(234),plt.imshow(reflect101,'gray'),plt.title('REFLECT_101')
@@ -729,6 +765,10 @@ plt.subplot(235),plt.imshow(wrap,'gray'),plt.title('WRAP')
 plt.subplot(236),plt.imshow(constant,'gray'),plt.title('CONSTANT')
 
 plt.show()
+
+cv.imshow('a', img)
+cv.waitKey(0)
+cv.destroyAllWindows()
 ```
 
 ### 2.2 图片几何操作
@@ -763,21 +803,68 @@ cv.waitKey(0)
 cv.destroyAllWindows()
 ```
 
+**添加水印图片：注意主图片的宽高应都大于水印图片的宽高**
+
+```python
+# 图片位操作
+logo = cv.imread("img/opencv-logo-white.jpg")
+# 确保操作的图片宽高都大于水印的大小
+main_img = cv.imread("img/01.jpg")
+# print(main_img.shape)
+rows, cols, channels = logo.shape
+roi = main_img[0:rows, 0:cols]
+# print("roi_shape", roi.shape)
+
+logo_gray = cv.cvtColor(logo, cv.COLOR_BGR2GRAY)
+# 转换为二值图像，10-阈值，255-填充色，0黑
+# 使用固定阈值进行二值处理,大于时取 255，反之取 0；
+ret, mask = cv.threshold(logo_gray, 30, 255, cv.THRESH_BINARY)
+
+mask_inv = cv.bitwise_not(mask) # 取反,变为白底
+# print("logo_shape", logo.shape)
+logo_fg = cv.bitwise_and(logo, logo, mask=mask) # 将logo区域外的地方置0，得到前景
+main_bg = cv.bitwise_and(roi, roi, mask=mask_inv) # 将 ROI 的logo 区域设置为 0
+dst = cv.add(logo_fg, main_bg)
+main_img[0:rows, 0:cols ] = dst
+
+
+plt.subplot(441),plt.imshow(imgBGR2RGB(logo),'gray'),plt.title('original')
+plt.subplot(442),plt.imshow(imgBGR2RGB(mask),'gray'),plt.title('mask')
+plt.subplot(443),plt.imshow(imgBGR2RGB(mask_inv),'gray'),plt.title('mask_inv')
+plt.subplot(444),plt.imshow(imgBGR2RGB(logo_fg),'gray'),plt.title('logo_fg')
+plt.subplot(412),plt.imshow(imgBGR2RGB(main_img),'gray'),plt.title('main_img')
+plt.subplot(413),plt.imshow(main_img,'gray'),plt.title('main_img')
+plt.subplot(414),plt.imshow(main_img,'gray'),plt.title('main_img')
+
+plt.show()
+```
+
+### 2.3 代码执行的效率
+
+[**Performance Measurement and Improvement Techniques**](https://docs.opencv.org/4.1.2/dc/d71/tutorial_py_optimization.html)
+
+**[cv.getTickCount](https://docs.opencv.org/4.1.2/db/de0/group__core__utils.html#gae73f58000611a1af25dd36d496bf4487)**: 在程序执行前后使用，计算时间或使用 `time.time()`
+
+**[cv.getTickFrequency](https://docs.opencv.org/4.1.2/db/de0/group__core__utils.html#ga705441a9ef01f47acdc55d87fbe5090c)**: 频次
+
+**优化**
+
+除非数组很大，否则 pyhton 原生的向量操作速度大于 numpy 的操作速度；
+
+[IPython 的魔法方法](https://pynash.org/2013/03/06/timing-and-profiling/)
+
+- `%time` & `%timeit`: See how long a script takes to run (one time, or averaged over a bunch of runs).
+- `%prun`: See how long it took each function in a script to run.
+- `%lprun`: See how long it took each line in a function to run.
+- `%mprun` & `%memit`: See how much memory a script uses (line-by-line, or averaged over a bunch of runs).
 
 
 
-
-
-
-
-
-
-
-## 3.
+## 3.图像操作
 
 [**Image Processing in OpenCV**](https://docs.opencv.org/4.1.2/d2/d96/tutorial_py_table_of_contents_imgproc.html)
 
-### 3.2 色彩变换
+### 3.1 色彩变换
 
 [**Changing Colorspaces**](https://docs.opencv.org/4.1.2/df/d9d/tutorial_py_colorspaces.html)
 
@@ -787,7 +874,82 @@ cv.destroyAllWindows()
  flags = [i for i in dir(cv) if i.startswith('COLOR_')]
 ```
 
-### 2.3 形态变换
+### 3.2 矩阵变换
+
+**[Geometric Transformations of Images](https://docs.opencv.org/4.1.2/da/d6e/tutorial_py_geometric_transformations.html)**
+
+**[cv.getPerspectiveTransform](https://docs.opencv.org/4.1.2/da/d54/group__imgproc__transform.html#ga20f62aa3235d869c9956436c870893ae)**
+
+**尺寸倍数变换**
+
+```python
+# 放大并保存
+img = cv.imread("img/03.jpg")
+print("放大前：", img.shape)
+# 放大倍数 fx,fy
+res = cv.resize(img, None, fx=2, fy=2, interpolation=cv.INTER_CUBIC)
+print("放大后：", res.shape)
+cv.imshow('res', res)
+c = cv.waitKey(0)
+if c==27 or c == ord('q'):
+    cv.destroyAllWindows()
+elif c==ord('s'):
+    cv.imwrite('img_scale.jpg', res)
+    cv.destroyAllWindows()
+
+# 或采用另一种方法
+height, width = img.shape[:2]
+res = cv.resize(img,(2*width, 2*height), interpolation = cv.INTER_CUBIC)
+```
+
+**1.平移操作**
+$$
+M = \begin{bmatrix} 1 & 0 & t_x \\ 0 & 1 & t_y \end{bmatrix}
+$$
+
+```python
+# 平移操作
+img = cv.imread("img/03.jpg", 0)
+rows, cols = img.shape
+print(img.shape)
+# print(rows)
+# print(img.shape[0])
+# [[1,0,move_x],[0,1,move_y]], 输出图片的尺寸：(width, height)
+translation_M = np.float32([[1,0,100], [0,1,0]])
+img_move = cv.warpAffine(img, translation_M, (img.shape[1], img.shape[0]))
+
+cv.imshow('dst', img_move)
+cv.waitKey(0)
+cv.destroyAllWindows()
+```
+
+**2.旋转**
+$$
+M = \begin{bmatrix} cos\theta & -sin\theta \\ sin\theta & cos\theta \end{bmatrix}
+$$
+
+```python
+# 旋转操作
+img = cv.imread("img/03.jpg", 0)
+rows, cols = img.shape
+# 正直为逆时针旋转
+rotation_M = cv.getRotationMatrix2D(((rows-1)/2, (cols-1)/2), 45, 1)
+rotation_img = cv.warpAffine(img, rotation_M, (cols, rows))
+
+cv.imshow('dst', rotation_img)
+cv.waitKey(0)
+cv.destroyAllWindows()
+```
+
+**3.仿射变换**
+
+[仿射变换解读](https://www.cnblogs.com/happystudyeveryday/p/10547316.html)
+
+
+
+
+
+### 3.3 形态变换
 
 [**Morphological Transformations**](https://docs.opencv.org/4.1.2/d9/d61/tutorial_py_morphological_ops.html)
 
