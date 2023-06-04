@@ -10,6 +10,17 @@
 *.userosscache
 *.sln.docstates
 
+# custom configure the ignore file
+<<<<<<< HEAD
+<<<<<<< HEAD
+code/python_CV/source_code
+=======
+code/python_CV/source_code/
+>>>>>>> 6b785df9fc7d405f65dc0dfcb3df0218643fc0e0
+=======
+code/python_CV/source_code/
+>>>>>>> 6b785df9fc7d405f65dc0dfcb3df0218643fc0e0
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
