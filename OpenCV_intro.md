@@ -494,8 +494,20 @@ OutputArray 	dst
 > [opencv-python 原版文档](https://docs.opencv.org/4.1.2/d6/d00/tutorial_py_root.html)
 >
 > [opencv-python 中文官方文档](http://www.woshicver.com/)
+>
+> [教程 Learn-OpenCV-in-3-hours](https://github.com/murtazahassan/Learn-OpenCV-in-3-hours)
 
-## 0.安装
+## 目录
+
+- [0.Introduction to OpenCV](https://docs.opencv.org/4.1.2/da/df6/tutorial_py_table_of_contents_setup.html)
+- [1.Gui Features in OpenCV](https://docs.opencv.org/4.1.2/dc/d4d/tutorial_py_table_of_contents_gui.html)
+- [2.Core Operations](https://docs.opencv.org/4.1.2/d7/d16/tutorial_py_table_of_contents_core.html)
+- [3.Image Processing in OpenCV](https://docs.opencv.org/4.1.2/d2/d96/tutorial_py_table_of_contents_imgproc.html)
+- 
+
+
+
+## 0.简介
 
 **直接安装**
 
@@ -868,13 +880,15 @@ plt.show()
 
 [**Changing Colorspaces**](https://docs.opencv.org/4.1.2/df/d9d/tutorial_py_colorspaces.html)
 
-将图片从一种色彩形式转换 (convert, cvt) 为另一种，常见的如： **BGR ↔ Gray, BGR ↔ HSV**
+将图片从一种色彩形式转换 **(,cvt，convert**) 为另一种，常见的如： **BGR ↔ Gray, BGR ↔ HSV**
 
 ```python
  flags = [i for i in dir(cv) if i.startswith('COLOR_')]
+ 
+ hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 ```
 
-### 3.2 矩阵变换
+### 3.2 几何变换
 
 **[Geometric Transformations of Images](https://docs.opencv.org/4.1.2/da/d6e/tutorial_py_geometric_transformations.html)**
 
@@ -947,8 +961,6 @@ cv.destroyAllWindows()
 
 
 
-
-
 ### 3.3 形态变换
 
 [**Morphological Transformations**](https://docs.opencv.org/4.1.2/d9/d61/tutorial_py_morphological_ops.html)
@@ -983,7 +995,303 @@ cv.imshow("canny_erode", img_erode)
 c = cv.waitKey(0)
 ```
 
-## 4.边缘检测
+### 3.4 二值化
+
+**[Image Thresholding](https://docs.opencv.org/4.1.2/d7/d4d/tutorial_py_thresholding.html)**
+
+-  **[cv.threshold](https://docs.opencv.org/4.1.2/d7/d1b/group__imgproc__misc.html#gae8a4a146d1ca78c626a53577199e9c57)**：(必须是灰色图像 img_gray，阈值(小于阈值取0)，超过阈值赋予的最大值，二值化方法)
+
+  返回值：ret (设置的阈值)，二值图像
+
+```python
+img = cv.imread('img/03.jpg',0)
+ret,thresh1 = cv.threshold(img,127,255,cv.THRESH_BINARY)
+ret,thresh2 = cv.threshold(img,127,255,cv.THRESH_BINARY_INV)
+ret,thresh3 = cv.threshold(img,127,255,cv.THRESH_TRUNC)
+ret,thresh4 = cv.threshold(img,127,255,cv.THRESH_TOZERO)
+ret,thresh5 = cv.threshold(img,127,255,cv.THRESH_TOZERO_INV)
+titles = ['Original Image','BINARY','BINARY_INV','TRUNC','TOZERO','TOZERO_INV']
+images = [img, thresh1, thresh2, thresh3, thresh4, thresh5]
+for i in range(6):
+    plt.subplot(2,3,i+1),plt.imshow(images[i],'gray')
+    plt.title(titles[i])
+    plt.xticks([]),plt.yticks([])
+plt.show()
+```
+
+- **[cv.adaptiveThreshold](https://docs.opencv.org/4.1.2/d7/d1b/group__imgproc__misc.html#ga72b913f352e4a1b1b397736707afcde3)** (自适应阈值)：`dst=cv.adaptiveThreshold(src, maxValue, adaptiveMethod, thresholdType,  C[, dst])`
+
+  `adaptiveMethod` 决定如何计算阈值，如 `cv.ADAPTIVE_THRESH_GAUSSIAN_C`:阈值是邻域值减去常数C的高斯加权和；
+
+  `thresholdType` 同 `cv.threshold` 中的参数；
+
+  `blockSize` 邻域面积大小，**奇数**
+
+```python
+# 自适应阈值设定
+img_gray = cv.imread("img/03.jpg", 0)
+# ret, img = cv.threshold(img_gray, 150, 255, cv.THRESH_BINARY)
+# 像素数19×19-奇数，常数 C=9
+img_threshold = cv.adaptiveThreshold(img_gray, 255,  cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 21, 2)
+cv.imshow("threshold image", img_threshold)
+
+cv.waitKey(0)
+cv.destroyAllWindows()
+```
+
+### 3.5 轮廓检测
+
+**[Contours in OpenCV](https://docs.opencv.org/4.1.2/d3/d05/tutorial_py_table_of_contents_contours.html)**
+
+- **[cv.findContours()](https://docs.opencv.org/4.1.2/d3/dc0/group__imgproc__shape.html#gadf1ad6a0b82947fa1fe3c3d497f260e0)**
+
+- **[cv.drawContours()](https://docs.opencv.org/4.1.2/d6/d6e/group__imgproc__draw.html#ga746c0625f1781f1ffc9056259103edbc)**
+
+**1.获得所在照片的轮廓**
+
+```python
+# 简单阈值设定
+img = cv.imread("img/03.jpg")
+img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+# ret, img = cv.threshold(img_gray, 150, 255, cv.THRESH_BINARY)
+ret, img_threshold = cv.threshold(img_gray, 150, 255, 0)
+
+contours, hierarchy = cv.findContours(img_threshold, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+# contours, hierarchy = cv.findContours(img_threshold, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+```
+
+**2.将轮廓绘制在指定的图片上**
+
+```python 
+# contours=-1表示绘制所有的轮廓
+cv.drawContours(img, contours, -1, (0,255,0), 1)
+
+# 绘制单独的轮廓 2 种方法
+# cv.drawContours(img, contours, 3, (0,255,0), 1)
+# cnt = contours[4]
+# cv.drawContours(img, [cnt], 0, (0, 255, 0), 1)
+
+cv.imshow("img", img)
+cv.waitKey(0)
+cv.destroyAllWindows()
+```
+
+**3.图像矩**
+
+[wiki image moment](https://encyclopedia.thefreedictionary.com/Image+moments) | [OpenCV moment](https://docs.opencv.org/4.1.2/d8/d23/classcv_1_1Moments.html#a0382b98fdb23acdcb05c91a2a44e5a1f)
+
+0 阶矩-面积 $M_{00} = \sum_i\sum_j V(i,j)$  其中 `V` 是对应 `i,j` 位置像素的值
+
+1 阶矩-静距 (面积乘以距离)  $M_{10} = \sum_i\sum_j i \cdot V(i,j);\quad M_{01} = \sum_i\sum_j j \cdot V(i,j)$ 
+
+2 阶矩-惯性矩 (面积乘以距离的平方)：
+$$
+M_{20} = \sum_i\sum_j i^2 \cdot V(i,j)\\
+M_{02} = \sum_i\sum_j j^2 \cdot V(i,j)\\
+M_{11} = \sum_i\sum_j i \cdot j \cdot  V(i,j)
+$$
+可以将图像看作质量密度不均匀的薄板，$V(i,j)$ 为质量密度分布函数，则：
+
+- 0 阶矩表示其总质量
+- 1 阶矩可表示质心：$x_c=M_{10}/M_{00} \quad y_c=M_{01}/M_{00}$
+- 2 阶矩可表示图像的大小和方向
+
+<img src="img/31.jpg" style="zoom: 67%;" />
+
+**HU 矩**
+
+矩的不变性 (Moment invariants)：
+
+- 平移不变 (Translation invariants)
+- 缩放不变性 (Scale invariants)
+- 旋转不变性 (Rotation invariants)
+
+HU 用二阶和三阶中心距构造 7 个不变矩，满足上述 3 个不变性：
+
+![](img/32.jpg)
+
+### 3.6 轮廓特性
+
+[**Contour Features**](https://docs.opencv.org/4.1.2/dd/d49/tutorial_py_contour_features.html)：周长 (Perimeter)，面积 (area)，中心 (centroid)等
+
+**[cv.moments()](https://docs.opencv.org/4.1.2/d3/dc0/group__imgproc__shape.html#ga556a180f43cab22649c23ada36a8a139)**：计算所有的矩，共 24 个
+
+- 空间矩 (spatial moments) $m : 00;01,10;02,11,20;03,12,21,30->10$
+
+- 中心距 (central moments) $mu : 20,11,02,30,21,12,03->7$，**中心矩是平移不变**
+
+- 归一化中心距 (normalized central moments) $nu: 20,11,02,30,21,12,03->7$，**归一化的中心矩平移、缩放不变**
+
+其余未出现的 $mu,nu:mu_{00}=m_{00}, nu_{00}=1, nu_{10}=mu_{10}=mu_{01}=mu_{10}=0 $
+
+```python
+# 面积area,M['m00']
+area = cv.contourArea(cnt)
+# 弧长
+perimeter = cv.arcLength(cnt,True)
+# 预估形状，DP道格拉斯-普克算法(Douglas–Peucker algorithm)
+epsilon = 0.1*cv.arcLength(cnt,True) # 控制与实际弧线的精度
+approx = cv.approxPolyDP(cnt,epsilon,True)
+```
+
+**检查是否是凸多边形**
+
+**[cv.convexHull()](https://docs.opencv.org/4.1.2/d3/dc0/group__imgproc__shape.html#ga014b28e56cb8854c0de4a211cb2be656)**
+
+凸状 (convex); 凸多边形(convexHull); Hull (外壳, 窗体); convexity defects (缺陷)
+
+```python
+k = cv.isContourConvex(cnt)
+# 与 approx 类似
+hull = cv.convexHull(cnt)
+```
+
+**2.矩形边框**
+
+**[cv.boundingRect()](https://docs.opencv.org/4.1.2/d3/dc0/group__imgproc__shape.html#ga103fcbda2f540f3ef1c042d6a9b35ac7)**：正交的矩形边框，可能不是最小区域
+
+```python
+# x,y (左上角坐标) 是 top-left 坐标系，注意坐标 y 向下；w,h未边框的宽高
+x, y, w, h = cv.boundingRect(cnt)
+# 绘制矩形框,厚度2，颜色BGR,中 G,即绿色
+cv.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 2)
+```
+
+**Rotated Rectangle**
+
+```python
+# 返回值：( center (x,y), (width, height), angle of rotation ).
+rect = cv.minAreaRect(cnt)
+# 获得矩形 4 个角点
+box = cv.boxPoints(rect)
+# 格式变换
+box = np.intp(box)
+cv.drawContours(img, [box], 0, (0,0,255), 2)
+```
+
+![](img/33.jpg)
+
+```python
+img = cv.imread("img/03.jpg")
+img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+ret, img_threshold = cv.threshold(img_gray, 100, 255, 0)
+contours, hierarchy = cv.findContours(img_threshold, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+
+for cnt in contours:
+    area = cv.contourArea(cnt)
+    print(area)
+    if area > 10 and area < 1000:
+        rec = cv.minAreaRect(cnt)
+        # print("min_A:", rec)
+        box = cv.boxPoints(rec)
+        box = np.intp(box)
+        cv.drawContours(img, [box], 0, (0, 0, 255), 1)
+cv.imshow("img", img)
+cv.waitKey(0)
+cv.destroyAllWindows()
+```
+
+**2.轮廓属性**
+
+[**Contour Properties**](https://docs.opencv.org/4.1.2/d1/d32/tutorial_py_contour_properties.html)
+
+```python
+# 宽高比 ( Aspect Ratio)
+x,y,w,h = cv.boundingRect(cnt)
+aspect_ratio = float(w)/h
+
+# 轮廓面积/矩形面积
+area = cv.contourArea(cnt)
+x,y,w,h = cv.boundingRect(cnt)
+rect_area = w*h
+extent = float(area)/rect_area
+```
+
+**3.人脸识别**
+
+viola 和 Jones 提出最早检测方法之一，使用 Haar Cascade 方法查找，在某些场景下仍能很好地发挥作用。
+
+opencv 在 Github 上的 [haarcascades 库](https://github.com/opencv/opencv/tree/master/data/haarcascades)
+
+使用传统  [Haar Cascade xml 文件](https://github.com/opencv/opencv/tree/master/data/haarcascades) 方法进行识别
+
+`detectMultiScale(image, scaleFactor, minNeighbors)`
+
+- image:待处理的图像
+
+- scaleFactor：检测框的最小尺寸
+
+- minNeighbors：相当于检测的阈值，过小会出现误检现象，即把一些其他元素误判成人脸，过大可能会检测不到目标
+
+```python
+# 加载 xml 文件,打开失败的话需要使用绝对路径
+faceCascade = cv.CascadeClassifier("res/haarcascade_frontalface_default.xml")
+# faceCascade = cv.CascadeClassifier("res/haarcascade_eye.xml")
+img = cv.imread('img/03.jpg')
+imgGray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+# 函数返回值 (x,y,w,h)
+faces = faceCascade.detectMultiScale(imgGray, 1.1, 1)
+
+for (x, y, w, h) in faces:
+    cv.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+
+cv.imshow("resimage", img)
+cv.waitKey(0)
+```
+
+**4.轮廓的函数**
+
+[**Contours : More Functions**](https://docs.opencv.org/4.1.2/d5/d45/tutorial_py_contours_more_functions.html)
+
+**[cv.matchShapes()](https://docs.opencv.org/4.1.2/d3/dc0/group__imgproc__shape.html#gaadc90cb16e2362c9bd6e7363e6e4c317)**
+
+基于  Hu-moment 进行计算，比较形状的相似性，特别是由原来图片旋转，平移，缩放而来的；
+
+```python
+img1 = cv.imread('image/01.jpg',0)
+img2 = cv.imread('image/02.jpg',0)
+ret, thresh = cv.threshold(img1, 127, 255,0)
+ret, thresh2 = cv.threshold(img2, 127, 255,0)
+contours,hierarchy = cv.findContours(thresh,2,1)
+cnt1 = contours[0]
+contours,hierarchy = cv.findContours(thresh2,2,1)
+cnt2 = contours[0]
+ret = cv.matchShapes(cnt1,cnt2,1,0.0)
+print( ret )
+```
+
+## 4.Project
+
+### 4.1 虚拟画笔
+
+[Virtual Paint](https://github.com/murtazahassan/Learn-OpenCV-in-3-hours/blob/master/project1.py)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
